@@ -1,0 +1,28 @@
+{
+  "name": "morse",
+  "version": "1.0.0",
+  "description": "RaspberryPi Node Morse lights project.",
+  "main": "morse.js",
+  "scripts": {
+    "start": "node morse.js",
+    "test": "node blink.js"
+  },
+  "keywords": [
+    "Morse",
+    "SilentStatement",
+    "Max",
+    "Franklin",
+    "Sanet",
+    "Stegmann",
+    "Raspberry",
+    "Pi",
+    "Node"
+  ],
+  "author": "Max Franklin",
+  "license": "ISC",
+  "dependencies": {
+    "fibers": "^1.0.10",
+    "onoff": "^1.0.4",
+    "twit": "^2.2.2"
+  }
+}
