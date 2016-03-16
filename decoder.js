@@ -1,29 +1,35 @@
 // Fiber
+// this is a Synchronous library. Lets me write little blocks of synchronous code (probably causing me grief somewhere)
 var Fiber = require('fibers');
 
 // RaspberryPi GPIO
+// The raspberry GPIO library
 var gpio = require('onoff').Gpio;
 var led;
 
-
+// My initial constructor variables. Still not getting when to use this.function or variable..
 function Decoder(ledNum) {
   led = new gpio(ledNum, 'out');
   this.ready = true;
 }
 
-Decoder.prototype.process = function(message, callback) {
-  message = String(message);
-  Fiber(function () {
+// Process function
+// this is what is called in the blink file.
+Decoder.prototype.process = function(message) {
+  message = String(message); // for some reason I had to force it into a string otherwise it was throwing "cannot use .length on this object"
+  Fiber(function () { // this is the synchronous code library kicking in (I had trouble understanding how this works so I'm sure its going to cause headaches for me)
     console.log("Tweet received.");
     console.log("Decoding \"" + message + "\" into Morse \n")
     for (var i = 0; i < message.length; i++) {
-      this.morse(message[i]);
+      this.morse(message[i]); // iterates through each letter into the morse translator
     }
-    this.ready = true;
+    this.ready = true; // then returns the ready variable back to true when it is ready for another message (theoretically)
   }).run();
 
 }
 
+// code for the dots in the morse
+// also using the Fiber system in the sleep command
 dot = function(times) {
   for (var i = 0; i < times; i++) {
     led.write(1);
@@ -33,6 +39,8 @@ dot = function(times) {
   }
 }
 
+// code for the dashes in the morse
+// also using Fiber
 dash = function(times) {
   for (var i = 0; i < times; i++) {
     led.write(1);
@@ -42,14 +50,17 @@ dash = function(times) {
   }
 }
 
+// spaces between letters acording to morse rules
 newLet = function() {
   this.sleep(3);
 }
 
+// spaces acording to morse rules
 space = function() {
   this.sleep(7);
 }
 
+// each letter and symbol
 morse = function(letter) {
   switch(letter) {
     case "a":
@@ -268,6 +279,7 @@ morse = function(letter) {
   }
 }
 
+// the sleep function to write the various symbols
 sleep = function(secs) {
   secs *= 300;
   var fiber = Fiber.current;
@@ -277,5 +289,5 @@ sleep = function(secs) {
   Fiber.yield();
 }
 
-// export the class
+// exporting the class (because tutorials said so)
 module.exports = Decoder;
