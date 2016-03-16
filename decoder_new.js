@@ -1,30 +1,46 @@
 // Fiber
 // this is a Synchronous library. Lets me write little blocks of synchronous code (probably causing me grief somewhere)
 var Fiber = require('fibers');
+var Queue = require('./queue');
 
 // RaspberryPi GPIO
 // The raspberry GPIO library
-var gpio = require('onoff').Gpio;
+// var gpio = require('onoff').Gpio;
 var led;
 
 // My initial constructor variables. Still not getting when to use this.function or variable..
 function Decoder(ledNum) {
-  led = new gpio(ledNum, 'out');
-  this.ready = true;
+  // led = new gpio(ledNum, 'out');
+  led = ledNum;
+}
+
+Decoder.prototype.show = function() {
+  this.process(Queue.getNextItem());
 }
 
 // Process function
 // this is what is called in the blink file.
 Decoder.prototype.process = function(message) {
-  message = String(message); // for some reason I had to force it into a string otherwise it was throwing "cannot use .length on this object"
-  Fiber(function () { // this is the synchronous code library kicking in (I had trouble understanding how this works so I'm sure its going to cause headaches for me)
-    console.log("Tweet received.");
-    console.log("Decoding \"" + message + "\" into Morse \n")
-    for (var i = 0; i < message.length; i++) {
-      this.morse(message[i]); // iterates through each letter into the morse translator
-    }
-    this.ready = true; // then returns the ready variable back to true when it is ready for another message (theoretically)
-  }).run();
+  if (message == null) {
+    console.log('No tweets in queue');
+    var self = this;
+    setTimeout(function() {
+      self.show();
+    }, 1000);
+  } else {
+    console.log(Queue.length + " tweets in queue");
+    console.log(led + " " + message);
+    message = String(message); // for some reason I had to force it into a string otherwise it was throwing "cannot use .length on this object"
+    Fiber(function () { // this is the synchronous code library kicking in (I had trouble understanding how this works so I'm sure its going to cause headaches for me)
+      console.log("Tweet received.");
+      console.log("Decoding \"" + message + "\" into Morse \n")
+      for (var i = 0; i < message.length; i++) {
+        this.morse(message[i]); // iterates through each letter into the morse translator
+      }
+      this.show(); // This lines is causing error. It has something to do with Fiber and how 'this' is scoped within fiber
+
+    }).run();
+  }
 
 }
 
@@ -32,9 +48,11 @@ Decoder.prototype.process = function(message) {
 // also using the Fiber system in the sleep command
 dot = function(times) {
   for (var i = 0; i < times; i++) {
-    led.write(1);
+    // led.write(1);
+    // console.log(led + " write 1");
     this.sleep(1);
-    led.write(0);
+    // led.write(0);
+    // console.log(led + " write 0");
     this.sleep(1);
   }
 }
@@ -43,9 +61,11 @@ dot = function(times) {
 // also using Fiber
 dash = function(times) {
   for (var i = 0; i < times; i++) {
-    led.write(1);
+    // led.write(1);
+    // console.log(led + " write 1");
     this.sleep(3);
-    led.write(0);
+    // led.write(0);
+    // console.log(led + " write 0");
     this.sleep(1);
   }
 }
@@ -281,7 +301,7 @@ morse = function(letter) {
 
 // the sleep function to write the various symbols
 sleep = function(secs) {
-  secs *= 300;
+  secs *= 30;
   var fiber = Fiber.current;
   setTimeout(function() {
     fiber.run();

@@ -11,22 +11,19 @@ console.log("Twitter Morse bot has been started... \n")
 // Library Requires
 var twit = require('twit'); // twitter library
 var config = require('./config'); // twitter API data in a config file that is not on Git
-var Decoder = require('./decoder'); // my Decoder constructor
+var Decoder = require('./decoder_new'); // my Decoder constructor
+var Queue = require('./queue');
 
 // Tweet Variables
 var T = new twit(config); // twitter config pulling from file for the library
 var tweets = []; // an array to hold tweets.. this is an attempt at a solution (not currently working)
 
-// Decoder
-var led = [17, 27]; // my led pins on my raspberry
-
-// my decoder constructor being created depending on the LED quantity that I have
-for (var i = 0; i < led.length; i++) {
-  decode[i] = new Decoder(led[i]);
-}
+// Queue
+// var queue = new Queue();
 
 // My stream it function...
 streamIt();
+startLeds();
 
 // TWEET FUNCTION : the beginning of the mess...
 function streamIt() {
@@ -39,11 +36,14 @@ function streamIt() {
   // This is the built in function for the twit library from npm that pulls the tweets. The call back runs as soon as it has a tweet
   stream.on('tweet', function (tweet) {
     var clnTweet = tweet.text.replace(myRegex, "").toLowerCase(); // I clean up the tweet here with my regex (thankyou)
-    for (var i = decode.length - 1; i >= 0; i--) {
-      if (decode[i].ready) { // so then, this checks the ready variable in my Decoder constructor if it is true then it sends it a tweet
-        decode[i].process(clnTweet); // it sends that tweet to the process function
-        decode[i].ready = false; // then for now it changes the variable in the Decoder to false (I tried doing it in the constructor itself but it didnt work)
-      }
-    }
+    Queue.addItem(clnTweet);
   });
+}
+
+function startLeds() {
+  var leds = [17, 27]; // my led pins on my raspberry
+  for (var i = 0; i < leds.length; i++) {
+    var decode = new Decoder(leds[i]); // we don't have to keep global reference to this.
+    decode.show();
+  }
 }
